@@ -14,15 +14,43 @@ class IncidentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
-{
-    return Inertia::render('incidents/index', [
-        'incidents' => Incident::with(['service', 'solutions'])
+    public function index(Request $request): Response
+    {
+        $query = Incident::with(['service', 'solutions'])
             ->select(['id', 'title', 'priority', 'status', 'service_id', 'sla_deadline', 'resolved_at', 'created_at'])
-            ->latest()
-            ->get()
-    ]);
-}
+            ->latest();
+
+        // Filtros
+        $filters = $request->only(['priority', 'status', 'month', 'year']);
+        
+        if ($filters['priority'] ?? false) {
+            $query->where('priority', $filters['priority']);
+        }
+        
+        if ($filters['status'] ?? false) {
+            $query->where('status', $filters['status']);
+        }
+        
+        if ($filters['month'] ?? false) {
+            $query->whereMonth('created_at', $filters['month']);
+        }
+        
+        if ($filters['year'] ?? false) {
+            $query->whereYear('created_at', $filters['year']);
+        }
+
+        return Inertia::render('incidents/index', [
+            'incidents' => $query->get()->map(function ($incident) {
+                $incident->steps = $incident->solutions->pluck('steps')->first();
+                return $incident;
+            }),
+            'filters' => $filters,
+            'years' => Incident::selectRaw('YEAR(created_at) as year')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year'),
+        ]);
+    }
 
     /**
      * Show the form for creating a new resource.

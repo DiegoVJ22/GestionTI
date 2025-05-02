@@ -1,8 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
@@ -29,12 +29,13 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal, TrendingUp } from 'lucide-react';
+import { ChevronDown, MoreHorizontal } from 'lucide-react';
 import * as React from 'react';
 import { Label, Pie, PieChart } from 'recharts';
 
 import { DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { router } from '@inertiajs/react';
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -43,62 +44,35 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const chartData1 = [
-    { browser: 'chrome', visitors: 275, fill: 'var(--color-chrome)' },
-    { browser: 'safari', visitors: 200, fill: 'var(--color-safari)' },
-];
-const chartConfig1 = {
-    visitors: {
-        label: 'Visitors',
-    },
-    chrome: {
-        label: 'Chrome',
-        color: 'var(--primary)',
-    },
-    safari: {
-        label: 'Safari',
-        color: 'var(--secondary)',
-    },
-} satisfies ChartConfig;
+// Añadir estos tipos arriba del componente
+type ChartData = {
+    name: string;
+    value: number;
+    fill?: string;
+};
 
-const chartData2 = [
-    { month: '1', desktop: 186 },
-    { month: '2', desktop: 305 },
-    { month: '3', desktop: 237 },
-    { month: '4', desktop: 73 },
-    { month: '5', desktop: 209 },
-    { month: '6', desktop: 214 },
-    { month: '1', desktop: 186 },
-    { month: '2', desktop: 305 },
-    { month: '3', desktop: 237 },
-    { month: '4', desktop: 73 },
-    { month: '5', desktop: 209 },
-    { month: '6', desktop: 214 },
-    { month: '1', desktop: 186 },
-    { month: '2', desktop: 305 },
-    { month: '3', desktop: 237 },
-    { month: '4', desktop: 73 },
-    { month: '5', desktop: 209 },
-    { month: '6', desktop: 214 },
-    { month: '1', desktop: 186 },
-    { month: '2', desktop: 305 },
-    { month: '3', desktop: 237 },
-    { month: '4', desktop: 73 },
-    { month: '5', desktop: 209 },
-    { month: '6', desktop: 214 },
-    { month: '1', desktop: 186 },
-    { month: '2', desktop: 305 },
-    { month: '3', desktop: 237 },
-    { month: '4', desktop: 73 },
-    { month: '5', desktop: 209 },
-    { month: '6', desktop: 214 },
-];
-const chartConfig2 = {
-    desktop: {
-        label: 'Desktop',
-        color: 'var(--primary)',
-    },
-} satisfies ChartConfig;
+type TimeGroup = 'year' | 'month' | 'day';
+
+// const chartConfig1 = {
+//     visitors: {
+//         label: 'Visitors',
+//     },
+//     chrome: {
+//         label: 'Chrome',
+//         color: 'var(--primary)',
+//     },
+//     safari: {
+//         label: 'Safari',
+//         color: 'var(--secondary)',
+//     },
+// } satisfies ChartConfig;
+
+// const chartConfig2 = {
+//     desktop: {
+//         label: 'Desktop',
+//         color: 'var(--primary)',
+//     },
+// } satisfies ChartConfig;
 
 // Definimos el tipo Incident
 export type Incident = {
@@ -114,6 +88,7 @@ export type Incident = {
     resolved_at: string | null;
     created_at: string;
     solutions_count?: number;
+    steps?: string; // Nuevo campo
 };
 
 // Columnas ajustadas para incidentes
@@ -185,6 +160,11 @@ export const columns: ColumnDef<Incident>[] = [
         ),
     },
     {
+        accessorKey: 'steps',
+        header: 'Pasos de Solución',
+        cell: ({ row }) => <div className="max-w-[300px] truncate text-sm">{row.original.steps || 'Sin solución registrada'}</div>,
+    },
+    {
         accessorKey: 'sla_deadline',
         header: 'Fecha Límite SLA',
         cell: ({ row }) => (
@@ -226,10 +206,56 @@ export const columns: ColumnDef<Incident>[] = [
     },
 ];
 
-export default function IndexIncidente({ incidents }: { incidents: Incident[] }) {
-    const totalVisitors = React.useMemo(() => {
-        return chartData1.reduce((acc, curr) => acc + curr.visitors, 0);
-    }, []);
+export default function IndexIncidente({
+    incidents,
+    filters,
+    years,
+}: {
+    incidents: Incident[];
+    filters: { [key: string]: string };
+    years: number[];
+}) {
+    // Estados para los filtros
+    const [priority, setPriority] = React.useState(filters.priority || 'all');
+    const [status, setStatus] = React.useState(filters.status || 'all');
+    const [month, setMonth] = React.useState(filters.month || 'all');
+    const [year, setYear] = React.useState(filters.year || 'all');
+    // Función para aplicar filtros
+    const applyFilters = () => {
+        router.get('/incidents', {
+            priority: priority !== 'all' ? priority : null,
+            status: status !== 'all' ? status : null,
+            month: month !== 'all' ? month : null,
+            year: year !== 'all' ? year : null,
+        });
+    };
+
+    // Resetear filtros
+    const resetFilters = () => {
+        setPriority('all');
+        setStatus('all');
+        setMonth('all');
+        setYear('all');
+        router.get('/incidents');
+    };
+
+    // Generar opciones de meses
+    const months = [
+        { value: 'all', label: 'Todos los meses' },
+        { value: '1', label: 'Enero' },
+        { value: '2', label: 'Febrero' },
+        { value: '3', label: 'Marzo' },
+        { value: '4', label: 'Abril' },
+        { value: '5', label: 'Mayo' },
+        { value: '6', label: 'Junio' },
+        { value: '7', label: 'Julio' },
+        { value: '8', label: 'Agosto' },
+        { value: '9', label: 'Setiembre' },
+        { value: '10', label: 'Octubre' },
+        { value: '11', label: 'Noviembre' },
+        { value: '12', label: 'Diciembre' },
+    ];
+
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -253,106 +279,253 @@ export default function IndexIncidente({ incidents }: { incidents: Incident[] })
             rowSelection,
         },
     });
+
+    // Datos para gráfico de barras
+    const barChartData = React.useMemo(() => {
+        const timeGroup: TimeGroup = year === 'all' && month === 'all' ? 'year' : year !== 'all' && month === 'all' ? 'month' : 'day';
+
+        const dataMap = new Map<string, number>();
+
+        incidents.forEach((incident) => {
+            const date = new Date(incident.created_at);
+            let key: string;
+
+            switch (timeGroup) {
+                case 'year':
+                    key = `${date.getFullYear()}`;
+                    break;
+                case 'month':
+                    key = `${date.getMonth() + 1}`;
+                    break;
+                case 'day':
+                    key = `${date.getDate()}`;
+                    break;
+            }
+
+            dataMap.set(key, (dataMap.get(key) || 0) + 1);
+        });
+
+        // Generar rango completo de fechas
+        const now = new Date();
+        const labels =
+            timeGroup === 'month'
+                ? Array.from({ length: 12 }, (_, i) => i + 1)
+                : timeGroup === 'day'
+                  ? Array.from({ length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() }, (_, i) => i + 1)
+                  : Array.from(new Set(incidents.map((i) => new Date(i.created_at).getFullYear())));
+
+        return labels.map((label) => ({
+            name: `${label}`,
+            value: dataMap.get(`${label}`) || 0,
+        }));
+    }, [incidents, month, year]);
+
+    // Datos para gráfico circular
+    const pieChartData = React.useMemo<ChartData[]>(() => {
+        if (priority !== 'all') {
+            return [
+                {
+                    name: priority,
+                    value: incidents.length,
+                    fill: priority === 'Alta' ? '#ef4444' : priority === 'Media' ? '#eab308' : '#22c55e',
+                },
+            ];
+        }
+
+        const priorities: ChartData[] = [
+            { name: 'Alta', value: 0, fill: '#ef4444' },
+            { name: 'Media', value: 0, fill: '#eab308' },
+            { name: 'Baja', value: 0, fill: '#22c55e' },
+        ];
+
+        incidents.forEach((incident) => {
+            const index = priorities.findIndex((p) => p.name === incident.priority);
+            if (index >= 0) {
+                priorities[index].value++;
+            }
+        });
+
+        return priorities.filter((p) => p.value > 0);
+    }, [incidents, priority]);
+
+    // Configuración dinámica de gráficos
+    const barChartConfig = {
+        value: {
+            label: 'Incidentes',
+            color: 'var(--primary)',
+        },
+    } satisfies ChartConfig;
+
+    const pieChartConfig = {
+        ...pieChartData.reduce(
+            (acc, curr) => ({
+                ...acc,
+                [curr.name]: {
+                    label: curr.name,
+                    color: curr.fill,
+                },
+            }),
+            {},
+        ),
+    } satisfies ChartConfig;
+
+    // Texto central del gráfico circular
+    const pieChartCenterText = (
+        <>
+            <tspan x="50%" dy="0" className="fill-foreground text-3xl font-bold">
+                {incidents.length}
+            </tspan>
+            <tspan x="50%" dy="24" className="fill-muted-foreground text-sm">
+                {priority !== 'all' ? priority : 'Total'}
+            </tspan>
+        </>
+    );
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Incidentes" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex">
-                    <Select>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Todos los meses" />
+                <div className="flex flex-wrap gap-2">
+                    <Select value={priority} onValueChange={setPriority}>
+                        <SelectTrigger className="w-[150px]">
+                            <SelectValue placeholder="Prioridad" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="0">Todos los meses</SelectItem>
-                            <SelectItem value="1">Enero</SelectItem>
-                            <SelectItem value="2">Febreo</SelectItem>
-                            <SelectItem value="3">Marzo</SelectItem>
-                            <SelectItem value="4">Abril</SelectItem>
-                            <SelectItem value="5">Mayo</SelectItem>
-                            <SelectItem value="6">Junio</SelectItem>
-                            <SelectItem value="7">Julio</SelectItem>
-                            <SelectItem value="8">Agosto</SelectItem>
-                            <SelectItem value="9">Setiembre</SelectItem>
-                            <SelectItem value="10">Octubre</SelectItem>
-                            <SelectItem value="11">Noviembre</SelectItem>
-                            <SelectItem value="12">Diciembre</SelectItem>
+                            <SelectItem value="all">Todas las prioridades</SelectItem>
+                            <SelectItem value="Alta">Alta</SelectItem>
+                            <SelectItem value="Media">Media</SelectItem>
+                            <SelectItem value="Baja">Baja</SelectItem>
                         </SelectContent>
                     </Select>
 
+                    <Select value={status} onValueChange={setStatus}>
+                        <SelectTrigger className="w-[150px]">
+                            <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos los estados</SelectItem>
+                            <SelectItem value="Abierto">Abierto</SelectItem>
+                            <SelectItem value="En progreso">En progreso</SelectItem>
+                            <SelectItem value="Cerrado">Cerrado</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={month} onValueChange={setMonth}>
+                        <SelectTrigger className="w-[150px]">
+                            <SelectValue placeholder="Mes" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {months.map((m) => (
+                                <SelectItem key={m.value} value={m.value}>
+                                    {m.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={year} onValueChange={setYear}>
+                        <SelectTrigger className="w-[150px]">
+                            <SelectValue placeholder="Año" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos los años</SelectItem>
+                            {years.map((y) => (
+                                <SelectItem key={y} value={y.toString()}>
+                                    {y}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Button onClick={applyFilters}>Aplicar</Button>
+                    <Button variant="outline" onClick={resetFilters}>
+                        Limpiar
+                    </Button>
                     <Button variant="outline">Registrar</Button>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border">
-                        {/* <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" /> */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Bar Chart</CardTitle>
-                                <CardDescription>January - June 2024</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <ChartContainer config={chartConfig2}>
-                                    <BarChart accessibilityLayer data={chartData2}>
-                                        <CartesianGrid vertical={false} />
-                                        <XAxis
-                                            dataKey="month"
-                                            tickLine={false}
-                                            tickMargin={10}
-                                            axisLine={false}
-                                            tickFormatter={(value) => value.slice(0, 3)}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[2fr_1fr]">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {year === 'all'
+                                    ? 'Incidentes por ' + (month === 'all' ? 'mes (todos los años)' : 'día')
+                                    : month === 'all'
+                                      ? `Incidentes por mes (${year})`
+                                      : `Incidentes por día (${months[Number(month) - 1]?.label} ${year})`}
+                            </CardTitle>
+                            <CardDescription>Distribución temporal de incidentes</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ChartContainer config={barChartConfig}>
+                                <BarChart data={barChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis
+                                        dataKey="name"
+                                        tickFormatter={(value) => {
+                                            if (month !== 'all' && year !== 'all') return value;
+                                            return months[Number(value) - 1]?.label.slice(0, 3) || value;
+                                        }}
+                                    />
+                                    <ChartTooltip
+                                        content={({ active, payload }) => {
+                                            if (!active || !payload || payload.length === 0) return null;
+
+                                            return (
+                                                <div className="bg-background rounded-md border p-2 shadow-md">
+                                                    <div className="font-medium">{payload[0].payload.name}</div>
+                                                    <div className="text-muted-foreground text-sm">Incidentes: {payload[0].value}</div>
+                                                </div>
+                                            );
+                                        }}
+                                    />
+                                    <Bar dataKey="value" fill="var(--primary)" radius={8} />
+                                </BarChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="h-full">
+                        <CardHeader className="pb-0">
+                            <CardTitle>Distribución por prioridad</CardTitle>
+                            <CardDescription>Proporción de incidentes por nivel de prioridad</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                            <ChartContainer config={pieChartConfig} className="mx-auto aspect-square max-h-[250px]">
+                                <PieChart>
+                                    <Pie data={pieChartData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={2}>
+                                        <Label
+                                            position="center"
+                                            content={() => (
+                                                <text textAnchor="middle" dominantBaseline="middle">
+                                                    {pieChartCenterText}
+                                                </text>
+                                            )}
                                         />
-                                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                                        <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
-                                    </BarChart>
-                                </ChartContainer>
-                            </CardContent>
-                            <CardFooter className="flex-col items-start gap-2 text-sm">
-                                <div className="flex gap-2 leading-none font-medium">
-                                    Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-                                </div>
-                                <div className="text-muted-foreground leading-none">Showing total visitors for the last 6 months</div>
-                            </CardFooter>
-                        </Card>
-                    </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border">
-                        {/* <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" /> */}
-                        <Card className="flex flex-col">
-                            <CardHeader className="items-center pb-0">
-                                <CardTitle>Pie Chart - Donut with Text</CardTitle>
-                                <CardDescription>January - June 2024</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-1 pb-0">
-                                <ChartContainer config={chartConfig1} className="mx-auto aspect-square max-h-[250px]">
-                                    <PieChart>
-                                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                                        <Pie data={chartData1} dataKey="visitors" nameKey="browser" innerRadius={60} strokeWidth={5}>
-                                            <Label
-                                                content={({ viewBox }) => {
-                                                    if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                                                        return (
-                                                            <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                                                                <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
-                                                                    {totalVisitors.toLocaleString()}
-                                                                </tspan>
-                                                                <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
-                                                                    Visitors
-                                                                </tspan>
-                                                            </text>
-                                                        );
-                                                    }
-                                                }}
-                                            />
-                                        </Pie>
-                                    </PieChart>
-                                </ChartContainer>
-                            </CardContent>
-                            <CardFooter className="flex-col gap-2 text-sm">
-                                <div className="flex items-center gap-2 leading-none font-medium">
-                                    Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-                                </div>
-                                <div className="text-muted-foreground leading-none">Showing total visitors for the last 6 months</div>
-                            </CardFooter>
-                        </Card>
-                    </div>
+                                    </Pie>
+                                    // Gráfico circular
+                                    <ChartTooltip
+                                        content={({ payload }) => {
+                                            if (!payload || payload.length === 0) return null;
+
+                                            return (
+                                                <div className="bg-background rounded-md border p-2 shadow-md">
+                                                    <div className="flex items-center gap-2">
+                                                        {payload[0].payload.fill && (
+                                                            <div
+                                                                className="h-3 w-3 rounded-full"
+                                                                style={{ backgroundColor: payload[0].payload.fill }}
+                                                            />
+                                                        )}
+                                                        <span className="font-medium">{payload[0].name}:</span>
+                                                        <span>{payload[0].value}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }}
+                                    />
+                                </PieChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
                 </div>
                 <div className="w-full">
                     <div className="flex items-center py-4">
