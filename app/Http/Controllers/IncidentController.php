@@ -14,12 +14,15 @@ class IncidentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        return Inertia::render('incidents/index', [
-            'incidents' => Incident::with('service')->paginate(10)
-        ]);
-    }
+    public function index(): Response
+{
+    return Inertia::render('incidents/index', [
+        'incidents' => Incident::with(['service', 'solutions'])
+            ->select(['id', 'title', 'priority', 'status', 'service_id', 'sla_deadline', 'resolved_at', 'created_at'])
+            ->latest()
+            ->get()
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.

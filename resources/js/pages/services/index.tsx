@@ -16,7 +16,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, MoreHorizontal } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Servicios',
@@ -38,114 +39,84 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const data: Payment[] = [
-    {
-        id: 'm5gr84i9',
-        amount: 316,
-        status: 'success',
-        email: 'ken99@example.com',
-    },
-    {
-        id: '3u1reuv4',
-        amount: 242,
-        status: 'success',
-        email: 'Abe45@example.com',
-    },
-    {
-        id: 'derv1ws0',
-        amount: 837,
-        status: 'processing',
-        email: 'Monserrat44@example.com',
-    },
-    {
-        id: '5kma53ae',
-        amount: 874,
-        status: 'success',
-        email: 'Silas22@example.com',
-    },
-    {
-        id: 'bhqecj4p',
-        amount: 721,
-        status: 'failed',
-        email: 'carmella@example.com',
-    },
-];
-
-export type Payment = {
-    id: string;
-    amount: number;
-    status: 'pending' | 'processing' | 'success' | 'failed';
-    email: string;
+// Definir tipo Service
+export type Service = {
+    id: number;
+    name: string;
+    status: 'Operativo' | 'Inestable' | 'Crítico';
+    last_checked_at: string | null;
+    created_at: string;
 };
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<Service>[] = [
     {
         id: 'select',
         header: ({ table }) => (
             <Checkbox
                 checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
                 onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                aria-label="Select all"
+                aria-label="Seleccionar todo"
             />
         ),
         cell: ({ row }) => (
-            <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} aria-label="Select row" />
+            <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} aria-label="Seleccionar fila" />
         ),
         enableSorting: false,
         enableHiding: false,
     },
     {
+        accessorKey: 'name',
+        header: 'Nombre',
+        cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div>,
+    },
+    {
         accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => <div className="capitalize">{row.getValue('status')}</div>,
-    },
-    {
-        accessorKey: 'email',
-        header: ({ column }) => {
-            return (
-                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Email
-                    <ArrowUpDown />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div className="lowercase">{row.getValue('email')}</div>,
-    },
-    {
-        accessorKey: 'amount',
-        header: () => <div className="text-right">Amount</div>,
+        header: 'Estado',
         cell: ({ row }) => {
-            const amount = parseFloat(row.getValue('amount'));
-
-            // Format the amount as a dollar amount
-            const formatted = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-            }).format(amount);
-
-            return <div className="text-right font-medium">{formatted}</div>;
+            const status = row.getValue('status') as 'Operativo' | 'Inestable' | 'Crítico';
+            const statusStyles = {
+                Operativo: 'bg-green-100 text-green-800',
+                Inestable: 'bg-yellow-100 text-yellow-800',
+                Crítico: 'bg-red-100 text-red-800',
+            };
+            return <span className={`rounded-md px-2 py-1 text-sm capitalize ${statusStyles[status]}`}>{status}</span>;
         },
+    },
+    {
+        accessorKey: 'last_checked_at',
+        header: 'Última verificación',
+        cell: ({ row }) => (
+            <div className="text-sm">
+                {row.getValue('last_checked_at') ? new Date(row.getValue('last_checked_at')).toLocaleDateString() : 'Nunca'}
+            </div>
+        ),
+    },
+    {
+        accessorKey: 'created_at',
+        header: 'Fecha de creación',
+        cell: ({ row }) => <div className="text-sm">{new Date(row.getValue('created_at')).toLocaleDateString()}</div>,
     },
     {
         id: 'actions',
         enableHiding: false,
         cell: ({ row }) => {
-            const payment = row.original;
+            const service = row.original;
 
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal />
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(payment.id)}>Copy payment ID</DropdownMenuItem>
+                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(service.id.toString())}>Copiar ID</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>View payment details</DropdownMenuItem>
+                        <DropdownMenuItem>Ver detalles</DropdownMenuItem>
+                        <DropdownMenuItem>Editar servicio</DropdownMenuItem>
+                        <DropdownMenuItem>Forzar verificación</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
@@ -153,14 +124,14 @@ export const columns: ColumnDef<Payment>[] = [
     },
 ];
 
-export default function IndexServicio() {
+export default function IndexServicio({ services }: { services: Service[] }) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
     const table = useReactTable({
-        data,
+        data: services,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -177,21 +148,22 @@ export default function IndexServicio() {
             rowSelection,
         },
     });
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Servicios" />
             <div className="w-full p-4">
                 <div className="flex items-center py-4">
                     <Input
-                        placeholder="Filter emails..."
-                        value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
-                        onChange={(event) => table.getColumn('email')?.setFilterValue(event.target.value)}
+                        placeholder="Filtrar por nombre..."
+                        value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+                        onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
                         className="max-w-sm"
                     />
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="ml-auto">
-                                Columns <ChevronDown />
+                                Columnas <ChevronDown />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -206,7 +178,11 @@ export default function IndexServicio() {
                                             checked={column.getIsVisible()}
                                             onCheckedChange={(value) => column.toggleVisibility(!!value)}
                                         >
-                                            {column.id}
+                                            {column.id === 'last_checked_at'
+                                                ? 'Última verificación'
+                                                : column.id === 'created_at'
+                                                  ? 'Fecha creación'
+                                                  : column.id}
                                         </DropdownMenuCheckboxItem>
                                     );
                                 })}
@@ -240,7 +216,7 @@ export default function IndexServicio() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={columns.length} className="h-24 text-center">
-                                        No results.
+                                        No se encontraron resultados.
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -249,14 +225,14 @@ export default function IndexServicio() {
                 </div>
                 <div className="flex items-center justify-end space-x-2 py-4">
                     <div className="text-muted-foreground flex-1 text-sm">
-                        {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
+                        {table.getFilteredSelectedRowModel().rows.length} de {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
                     </div>
                     <div className="space-x-2">
                         <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                            Previous
+                            Anterior
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                            Next
+                            Siguiente
                         </Button>
                     </div>
                 </div>

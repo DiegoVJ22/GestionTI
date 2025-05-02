@@ -13,12 +13,14 @@ class ServiceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        return Inertia::render('services/index', [
-            'services' => Service::all()
-        ]);
-    }
+    public function index(): Response
+{
+    return Inertia::render('services/index', [
+        'services' => Service::select(['id', 'name', 'status', 'last_checked_at', 'created_at'])
+            ->latest()
+            ->get()
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.

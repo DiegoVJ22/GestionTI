@@ -29,7 +29,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ChevronDown, MoreHorizontal, TrendingUp } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, TrendingUp } from 'lucide-react';
 import * as React from 'react';
 import { Label, Pie, PieChart } from 'recharts';
 
@@ -100,47 +100,24 @@ const chartConfig2 = {
     },
 } satisfies ChartConfig;
 
-const data: Payment[] = [
-    {
-        id: 'm5gr84i9',
-        amount: 316,
-        status: 'success',
-        email: 'ken99@example.com',
-    },
-    {
-        id: '3u1reuv4',
-        amount: 242,
-        status: 'success',
-        email: 'Abe45@example.com',
-    },
-    {
-        id: 'derv1ws0',
-        amount: 837,
-        status: 'processing',
-        email: 'Monserrat44@example.com',
-    },
-    {
-        id: '5kma53ae',
-        amount: 874,
-        status: 'success',
-        email: 'Silas22@example.com',
-    },
-    {
-        id: 'bhqecj4p',
-        amount: 721,
-        status: 'failed',
-        email: 'carmella@example.com',
-    },
-];
-
-export type Payment = {
-    id: string;
-    amount: number;
-    status: 'pending' | 'processing' | 'success' | 'failed';
-    email: string;
+// Definimos el tipo Incident
+export type Incident = {
+    id: number;
+    title: string;
+    priority: 'Alta' | 'Media' | 'Baja';
+    status: 'Abierto' | 'En progreso' | 'Cerrado';
+    service: {
+        name: string;
+        status: string;
+    };
+    sla_deadline: string | null;
+    resolved_at: string | null;
+    created_at: string;
+    solutions_count?: number;
 };
 
-export const columns: ColumnDef<Payment>[] = [
+// Columnas ajustadas para incidentes
+export const columns: ColumnDef<Incident>[] = [
     {
         id: 'select',
         header: ({ table }) => (
@@ -157,57 +134,91 @@ export const columns: ColumnDef<Payment>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => <div className="capitalize">{row.getValue('status')}</div>,
+        accessorKey: 'title',
+        header: 'Título',
+        cell: ({ row }) => <div className="font-medium">{row.getValue('title')}</div>,
     },
     {
-        accessorKey: 'email',
-        header: ({ column }) => {
+        accessorKey: 'priority',
+        header: 'Prioridad',
+        cell: ({ row }) => {
+            const priority = row.getValue('priority') as string;
             return (
-                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Email
-                    <ArrowUpDown />
-                </Button>
+                <div className="flex items-center gap-2">
+                    <div
+                        className={`h-2 w-2 rounded-full ${priority === 'Alta' ? 'bg-red-500' : priority === 'Media' ? 'bg-yellow-500' : 'bg-green-500'}`}
+                    />
+                    <span className="capitalize">{priority}</span>
+                </div>
             );
         },
-        cell: ({ row }) => <div className="lowercase">{row.getValue('email')}</div>,
     },
     {
-        accessorKey: 'amount',
-        header: () => <div className="text-right">Amount</div>,
+        accessorKey: 'status',
+        header: 'Estado',
         cell: ({ row }) => {
-            const amount = parseFloat(row.getValue('amount'));
-
-            // Format the amount as a dollar amount
-            const formatted = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-            }).format(amount);
-
-            return <div className="text-right font-medium">{formatted}</div>;
+            const status = row.getValue('status') as 'Abierto' | 'En progreso' | 'Cerrado';
+            const statusStyles: Record<'Abierto' | 'En progreso' | 'Cerrado', string> = {
+                Abierto: 'bg-blue-100 text-blue-800',
+                'En progreso': 'bg-yellow-100 text-yellow-800',
+                Cerrado: 'bg-green-100 text-green-800',
+            };
+            return <span className={`rounded-md px-2 py-1 text-sm capitalize ${statusStyles[status]}`}>{status}</span>;
         },
+    },
+    {
+        accessorKey: 'service.name',
+        header: 'Servicio',
+        cell: ({ row }) => (
+            <div className="flex items-center gap-2">
+                <span>{row.original.service?.name}</span>
+                <span
+                    className={`h-2 w-2 rounded-full ${
+                        row.original.service?.status === 'Operativo'
+                            ? 'bg-green-500'
+                            : row.original.service?.status === 'Inestable'
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
+                    }`}
+                />
+            </div>
+        ),
+    },
+    {
+        accessorKey: 'sla_deadline',
+        header: 'Fecha Límite SLA',
+        cell: ({ row }) => (
+            <div className="text-sm">{row.getValue('sla_deadline') ? new Date(row.getValue('sla_deadline')).toLocaleDateString() : 'N/A'}</div>
+        ),
+    },
+    {
+        accessorKey: 'resolved_at',
+        header: 'Resuelto en',
+        cell: ({ row }) => (
+            <div className="text-sm">{row.getValue('resolved_at') ? new Date(row.getValue('resolved_at')).toLocaleDateString() : 'Pendiente'}</div>
+        ),
     },
     {
         id: 'actions',
         enableHiding: false,
         cell: ({ row }) => {
-            const payment = row.original;
+            const incident = row.original;
 
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal />
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(payment.id)}>Copy payment ID</DropdownMenuItem>
+                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(incident.id.toString())}>Copiar ID</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>View payment details</DropdownMenuItem>
+                        <DropdownMenuItem>Ver detalles</DropdownMenuItem>
+                        <DropdownMenuItem>Editar incidencia</DropdownMenuItem>
+                        <DropdownMenuItem>Marcar como resuelto</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
@@ -215,7 +226,7 @@ export const columns: ColumnDef<Payment>[] = [
     },
 ];
 
-export default function IndexIncidente() {
+export default function IndexIncidente({ incidents }: { incidents: Incident[] }) {
     const totalVisitors = React.useMemo(() => {
         return chartData1.reduce((acc, curr) => acc + curr.visitors, 0);
     }, []);
@@ -225,7 +236,7 @@ export default function IndexIncidente() {
     const [rowSelection, setRowSelection] = React.useState({});
 
     const table = useReactTable({
-        data,
+        data: incidents,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -346,9 +357,9 @@ export default function IndexIncidente() {
                 <div className="w-full">
                     <div className="flex items-center py-4">
                         <Input
-                            placeholder="Filter emails..."
-                            value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
-                            onChange={(event) => table.getColumn('email')?.setFilterValue(event.target.value)}
+                            placeholder="Filtrar por título..."
+                            value={(table.getColumn('title')?.getFilterValue() as string) ?? ''}
+                            onChange={(event) => table.getColumn('title')?.setFilterValue(event.target.value)}
                             className="max-w-sm"
                         />
                         <DropdownMenu>
