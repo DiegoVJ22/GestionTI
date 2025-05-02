@@ -53,12 +53,12 @@ export default function Dashboard() {
     return (
         <AppLayout>
             <Head title="Dashboard" />
-            <Card>
-                <CardHeader>
-                    <CardTitle>Total incidentes este mes</CardTitle>
-                </CardHeader>
-            </Card>
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Total incidentes este mes</CardTitle>
+                    </CardHeader>
+                </Card>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {cards.map((card, idx) => (
                         <Card key={idx} className="h-[20rem] bg-black">

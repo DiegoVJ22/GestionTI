@@ -66,23 +66,21 @@ class IncidentController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = Validator::make($request->all(), [
-            'title' => 'required|string',
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'priority' => 'required|string|in:Abierto,En progreso,Cerrado',
-            'service_id' => 'required|exists:services,id',
-            'user_id' => 'required|string|exists:user,id',
-            'sla_deadline' => 'required'
+            'priority' => 'required|in:Alta,Media,Baja',
+            'service_id' => 'required|exists:services,id'
         ]);
-        
-        if($validated->fails()) {
-            return redirect()->route('incidents.create')->with('errors', $validated->errors());
-        }
 
-        $service_affected = Service::findOrFail($request->service_id);
-        Incident::create($validated);
-        
-        return redirect()->route('incidents.index')->with('success', "Incidente '{$request->title}' del servicio {$service_affected->name} registrado exitosamente.");
+        $incident = Incident::create([
+            ...$validated,
+            'status' => 'Abierto', // Estado por defecto
+            'user_id' => \Illuminate\Support\Facades\Auth::user()->id // Asigna el usuario autenticado
+        ]);
+
+        return redirect()->route('incidents.index')
+            ->with('success', "Incidente '{$incident->title}' registrado exitosamente.");
     }
 
     public function solutions($id) {
