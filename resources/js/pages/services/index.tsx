@@ -1,9 +1,9 @@
+'use client';
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-'use client';
-
 import {
     ColumnDef,
     ColumnFiltersState,
