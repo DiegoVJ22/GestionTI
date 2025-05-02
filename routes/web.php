@@ -6,9 +6,11 @@ use App\Http\Controllers\SlaController;
 use App\Http\Controllers\OpenAIController;
 use App\Http\Controllers\SolutionController;
 use App\Models\Service;
+use App\Models\Incident;
 use App\Notifications\ServiceCritical;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -16,7 +18,29 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+        $totalIncidentsThisMonth = Incident::whereMonth('created_at', now()->month)
+                                           ->whereYear('created_at', now()->year)
+                                           ->count();
+
+        $criticalServices = Service::where('status', 'Crítico')->count();
+        $operationalServices = Service::where('status', 'Operativo')->count();
+
+        $criticalServicesByMonth = collect(range(1, 12))->map(function ($month) {
+            return [
+                'month' => Carbon::create()->month($month)->format('F'),
+                'count' => Service::where('status', 'Crítico')
+                                  ->whereMonth('created_at', $month)
+                                  ->whereYear('created_at', now()->year)
+                                  ->count(),
+            ];
+        });
+
+        return Inertia::render('dashboard', [
+            'totalIncidentsThisMonth' => $totalIncidentsThisMonth,
+            'criticalServices' => $criticalServices,
+            'operationalServices' => $operationalServices,
+            'criticalServicesByMonth' => $criticalServicesByMonth,
+        ]);
     })->name('dashboard');
 
     // ServiceController routes
