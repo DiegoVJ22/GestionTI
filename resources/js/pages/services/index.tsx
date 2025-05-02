@@ -153,7 +153,7 @@ export const columns: ColumnDef<Payment>[] = [
     },
 ];
 
-export default function vistaServicio() {
+export default function IndexServicio() {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});

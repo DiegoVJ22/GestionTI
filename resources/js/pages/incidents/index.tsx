@@ -215,7 +215,7 @@ export const columns: ColumnDef<Payment>[] = [
     },
 ];
 
-export default function vistaIncidente() {
+export default function IndexIncidente() {
     const totalVisitors = React.useMemo(() => {
         return chartData1.reduce((acc, curr) => acc + curr.visitors, 0);
     }, []);
