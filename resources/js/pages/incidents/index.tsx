@@ -1,22 +1,39 @@
 'use client';
 
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from '@/components/ui/drawer';
 import {
     DropdownMenu,
+    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label as ShadcnLabel } from '@/components/ui/label';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Incident } from '@/types/incident';
+import { Service } from '@/types/service';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -31,22 +48,9 @@ import {
 } from '@tanstack/react-table';
 import { ChevronDown, MoreHorizontal } from 'lucide-react';
 import * as React from 'react';
-import { Label, Pie, PieChart } from 'recharts';
+import { FormEventHandler } from 'react';
+import { Bar, BarChart, CartesianGrid, Label, Pie, PieChart, XAxis } from 'recharts';
 
-import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from '@/components/ui/drawer';
-import { DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { router } from '@inertiajs/react';
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Incidentes',
@@ -83,23 +87,6 @@ type TimeGroup = 'year' | 'month' | 'day';
 //         color: 'var(--primary)',
 //     },
 // } satisfies ChartConfig;
-
-// Definimos el tipo Incident
-export type Incident = {
-    id: number;
-    title: string;
-    priority: 'Alta' | 'Media' | 'Baja';
-    status: 'Abierto' | 'En progreso' | 'Cerrado';
-    service: {
-        name: string;
-        status: string;
-    };
-    sla_deadline: string | null;
-    resolved_at: string | null;
-    created_at: string;
-    solutions_count?: number;
-    steps?: string; // Nuevo campo
-};
 
 // Columnas ajustadas para incidentes
 export const columns: ColumnDef<Incident>[] = [
@@ -259,15 +246,34 @@ export const columns: ColumnDef<Incident>[] = [
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(incident.id.toString())}>Copiar ID</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Ver detalles</DropdownMenuItem>
-                        <DropdownMenuItem>Editar incidencia</DropdownMenuItem>
                         <DropdownMenuItem>Marcar como resuelto</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
         },
+    },
+];
+
+const frameworks = [
+    {
+        value: 'next.js',
+        label: 'Next.js',
+    },
+    {
+        value: 'sveltekit',
+        label: 'SvelteKit',
+    },
+    {
+        value: 'nuxt.js',
+        label: 'Nuxt.js',
+    },
+    {
+        value: 'remix',
+        label: 'Remix',
+    },
+    {
+        value: 'astro',
+        label: 'Astro',
     },
 ];
 
@@ -280,6 +286,25 @@ export default function IndexIncidente({
     filters: { [key: string]: string };
     years: number[];
 }) {
+    const { services } = usePage<{ services: Service[] }>().props;
+    const { data, setData, post, errors } = useForm({
+        title: '',
+        description: '',
+        service_id: '',
+    });
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        post(route('incidents.store'), {
+            preserveScroll: true,
+            onError: () => {
+                // toast.dismiss('form-error'); // evita duplicados
+                // toast.error('Corrige los campos marcados.', {
+                //     id: 'form-error',
+                //     duration: 4000,
+                // });
+            },
+        });
+    };
     // Estados para los filtros
     const [priority, setPriority] = React.useState(filters.priority || 'all');
     const [status, setStatus] = React.useState(filters.status || 'all');
@@ -461,7 +486,6 @@ export default function IndexIncidente({
                             <SelectItem value="Baja">Baja</SelectItem>
                         </SelectContent>
                     </Select>
-
                     <Select value={status} onValueChange={setStatus}>
                         <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="Estado" />
@@ -473,7 +497,6 @@ export default function IndexIncidente({
                             <SelectItem value="Cerrado">Cerrado</SelectItem>
                         </SelectContent>
                     </Select>
-
                     <Select value={month} onValueChange={setMonth}>
                         <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="Mes" />
@@ -486,7 +509,6 @@ export default function IndexIncidente({
                             ))}
                         </SelectContent>
                     </Select>
-
                     <Select value={year} onValueChange={setYear}>
                         <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="Año" />
@@ -500,13 +522,74 @@ export default function IndexIncidente({
                             ))}
                         </SelectContent>
                     </Select>
-
                     <Button onClick={applyFilters}>Aplicar</Button>
                     <Button variant="outline" onClick={resetFilters}>
                         Limpiar
                     </Button>
-                    <Button variant="outline">Registrar</Button>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="outline">Registrar</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <form onSubmit={submit}>
+                                <div className="grid gap-4">
+                                    <div className="grid gap-3">
+                                        <ShadcnLabel htmlFor="title">Titulo</ShadcnLabel>
+                                        <Input
+                                            id="title"
+                                            className="mt-1 block w-full"
+                                            value={data.title}
+                                            onChange={(e) => setData('title', e.target.value)}
+                                            autoComplete="title"
+                                            placeholder=""
+                                        />
+                                        <InputError message={errors.title} />
+                                    </div>
+                                    <div className="grid gap-3">
+                                        <ShadcnLabel htmlFor="description">Descripción</ShadcnLabel>
+                                        <Textarea
+                                            id="description"
+                                            className="mt-1 block w-full"
+                                            value={data.description}
+                                            onChange={(e) => setData('description', e.target.value)}
+                                            autoComplete="descripcion"
+                                            placeholder=""
+                                        />
+                                        <InputError message={errors.description} />
+                                    </div>
+                                    <div className="grid gap-3">
+                                        <ShadcnLabel htmlFor="service">Servicio</ShadcnLabel>
+                                        <Select value={data.service_id} onValueChange={(value) => setData('service_id', value)}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Selecciona un servicio" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    <SelectLabel>Servicios</SelectLabel>
+                                                    {services.map((service) => (
+                                                        <SelectItem key={service.id} value={service.id.toString()}>
+                                                            {service.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError message={errors.service_id} />
+                                    </div>
+                                </div>
+                                <DialogFooter className="mt-4">
+                                    <DialogClose asChild>
+                                        <Button variant="outline" type="button">
+                                            Cancelar
+                                        </Button>
+                                    </DialogClose>
+                                    <Button type="submit">Registrar</Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
                 </div>
+
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[2fr_1fr]">
                     <Card>
                         <CardHeader>

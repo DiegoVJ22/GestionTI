@@ -43,25 +43,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('dashboard');
 
-    // ServiceController routes
-    Route::get('/services', [ServiceController::class, 'index']);
-    Route::get('/services/create', [ServiceController::class, 'create']);
-    Route::post('/services', [ServiceController::class, 'store']);
-    Route::get('/services/{service_id}', [ServiceController::class, 'show']);
-
-    // IncidentController routes
-    Route::get('/incidents', [IncidentController::class, 'index']);
-    Route::get('/incidents/create', [IncidentController::class, 'create']);
-    Route::post('/incidents', [IncidentController::class, 'store']);
-    Route::post('/incidents/{incident_id}/solutions', [IncidentController::class, 'solutions']);
-
-    // SlaController routes
-    Route::get('/slas', [SlaController::class, 'index']);
-    Route::get('/services/{service_id}/sla', [SlaController::class, 'show']);
-
-    // SolutionController routes
-    Route::get('/solutions', [SolutionController::class, 'index']);
-    Route::post('/solutions', [SolutionController::class, 'store']); // Aún no funcional
+    Route::resource('incidents', IncidentController::class);
+    Route::resource('services', ServiceController::class);
 
     // OpenAIController routes
     Route::get('/chat', [OpenAIController::class, 'index']); // Aún no funcional+

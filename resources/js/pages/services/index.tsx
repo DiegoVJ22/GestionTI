@@ -3,7 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -16,21 +16,14 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Service } from '@/types/service';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -38,15 +31,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/services',
     },
 ];
-
-// Definir tipo Service
-export type Service = {
-    id: number;
-    name: string;
-    status: 'Operativo' | 'Inestable' | 'Crítico';
-    last_checked_at: string | null;
-    created_at: string;
-};
 
 export const columns: ColumnDef<Service>[] = [
     {
@@ -91,40 +75,41 @@ export const columns: ColumnDef<Service>[] = [
             </div>
         ),
     },
-    {
-        accessorKey: 'created_at',
-        header: 'Fecha de creación',
-        cell: ({ row }) => <div className="text-sm">{new Date(row.getValue('created_at')).toLocaleDateString()}</div>,
-    },
-    {
-        id: 'actions',
-        enableHiding: false,
-        cell: ({ row }) => {
-            const service = row.original;
+    // {
+    //     accessorKey: 'created_at',
+    //     header: 'Fecha de creación',
+    //     cell: ({ row }) => <div className="text-sm">{new Date(row.getValue('created_at')).toLocaleDateString()}</div>,
+    // },
+    // {
+    //     id: 'actions',
+    //     enableHiding: false,
+    //     cell: ({ row }) => {
+    //         const service = row.original;
 
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Abrir menú</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(service.id.toString())}>Copiar ID</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Ver detalles</DropdownMenuItem>
-                        <DropdownMenuItem>Editar servicio</DropdownMenuItem>
-                        <DropdownMenuItem>Forzar verificación</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
-        },
-    },
+    //         return (
+    //             <DropdownMenu>
+    //                 <DropdownMenuTrigger asChild>
+    //                     <Button variant="ghost" className="h-8 w-8 p-0">
+    //                         <span className="sr-only">Abrir menú</span>
+    //                         <MoreHorizontal className="h-4 w-4" />
+    //                     </Button>
+    //                 </DropdownMenuTrigger>
+    //                 <DropdownMenuContent align="end">
+    //                     <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+    //                     <DropdownMenuItem onClick={() => navigator.clipboard.writeText(service.id.toString())}>Copiar ID</DropdownMenuItem>
+    //                     <DropdownMenuSeparator />
+    //                     <DropdownMenuItem>Ver detalles</DropdownMenuItem>
+    //                     <DropdownMenuItem>Editar servicio</DropdownMenuItem>
+    //                     <DropdownMenuItem>Forzar verificación</DropdownMenuItem>
+    //                 </DropdownMenuContent>
+    //             </DropdownMenu>
+    //         );
+    //     },
+    // },
 ];
 
-export default function IndexServicio({ services }: { services: Service[] }) {
+export default function IndexServicio() {
+    const { services } = usePage<{ services: Service[] }>().props;
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});

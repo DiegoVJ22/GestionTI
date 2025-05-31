@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->enum('priority', ['Alta', 'Media', 'Baja']);
-            $table->enum('status', ['Abierto', 'En progreso', 'Cerrado']);
+            $table->enum('priority', ['Alta', 'Media', 'Baja'])->nullable();
+            $table->enum('status', ['Abierto', 'En progreso', 'Cerrado'])->default('Abierto');
             
             $table->foreignId('service_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');

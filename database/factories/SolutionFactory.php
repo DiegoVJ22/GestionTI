@@ -68,7 +68,7 @@ class SolutionFactory extends Factory
         $selectedSteps = array_slice($steps, 0, $count);
         
         // Agregar paso final común
-        $selectedSteps[] = "{$count}. Documentar solución en el sistema de gestión";
+        $selectedSteps[] = ($count + 1) . ". Documentar solución en el sistema de gestión";
         
         return implode("\n", $selectedSteps);
     }

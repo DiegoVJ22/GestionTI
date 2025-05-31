@@ -44,6 +44,7 @@ class IncidentController extends Controller
                 $incident->steps = $incident->solutions->pluck('steps')->first();
                 return $incident;
             }),
+            'services' => Service::all(),
             'filters' => $filters,
             'years' => Incident::selectRaw('YEAR(created_at) as year')
                 ->distinct()
@@ -57,8 +58,7 @@ class IncidentController extends Controller
      */
     public function create()
     {
-        $services = Service::all(); // Servicios a los que se registrarán los incidentes en la vista
-        return view('incidents.create', compact('services'));
+        
     }
 
     /**
@@ -69,18 +69,13 @@ class IncidentController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'priority' => 'required|in:Alta,Media,Baja',
-            'service_id' => 'required|exists:services,id'
+            'service_id' => 'required|exists:services,id',
         ]);
-
-        $incident = Incident::create([
-            ...$validated,
-            'status' => 'Abierto', // Estado por defecto
-            'user_id' => \Illuminate\Support\Facades\Auth::user()->id // Asigna el usuario autenticado
-        ]);
-
-        return redirect()->route('incidents.index')
-            ->with('success', "Incidente '{$incident->title}' registrado exitosamente.");
+        
+        // Crear el incidente
+        $incident = Incident::create($validated);
+        
+        return to_route('incidents.index')->with('success', 'El incidente fue creado correctamente.');
     }
 
     public function solutions($id) {
