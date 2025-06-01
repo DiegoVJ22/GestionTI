@@ -56,6 +56,7 @@ export type IncidentFormData = {
     title: string;
     description: string;
     service_id: string;
+    category: string; // Añadir campo category
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -64,16 +65,16 @@ const PRIORITY_COLORS: Record<string, string> = {
     Baja: 'bg-green-500',
 };
 
-const STATUS_STYLES: Record<'Abierto' | 'En progreso' | 'Cerrado', string> = {
-    Abierto: 'bg-blue-100 text-blue-800',
-    'En progreso': 'bg-yellow-100 text-yellow-800',
-    Cerrado: 'bg-green-100 text-green-800',
+const STATUS_STYLES: Record<'Abierto' | 'En Progreso' | 'Cerrado', string> = {
+    Abierto: 'w-32 bg-blue-200 text-blue-900 border border-blue-300 font-medium rounded-full px-3 py-1 text-sm text-center',
+    'En Progreso': 'w-32 bg-yellow-200 text-yellow-900 border border-yellow-300 font-medium rounded-full px-3 py-1 text-sm text-center',
+    Cerrado: 'w-32 bg-green-200 text-green-900 border border-green-300 font-medium rounded-full px-3 py-1 text-sm text-center',
 };
 
 const SERVICE_STATUS_COLORS: Record<string, string> = {
     Operativo: 'bg-green-500',
     Inestable: 'bg-yellow-500',
-    'Fuera de servicio': 'bg-red-500',
+    Crítico: 'bg-red-500',
 };
 
 // Columnas ajustadas para incidentes
@@ -115,8 +116,8 @@ export const columns: ColumnDef<Incident>[] = [
         accessorKey: 'status',
         header: 'Estado',
         cell: ({ row }) => {
-            const status = row.getValue('status') as 'Abierto' | 'En progreso' | 'Cerrado';
-            return <span className={`rounded-md px-2 py-1 text-sm capitalize ${STATUS_STYLES[status]}`}>{status}</span>;
+            const status = row.getValue('status') as 'Abierto' | 'En Progreso' | 'Cerrado';
+            return <span className={`min-w-[110px] text-center rounded-md px-2 py-1 text-sm capitalize ${STATUS_STYLES[status]}`}>{status}</span>;
         },
     },
     {
@@ -142,13 +143,6 @@ export const columns: ColumnDef<Incident>[] = [
                 />
             );
         },
-    },
-    {
-        accessorKey: 'sla_deadline',
-        header: 'Fecha Límite SLA',
-        cell: ({ row }) => (
-            <div className="text-sm">{row.getValue('sla_deadline') ? new Date(row.getValue('sla_deadline')).toLocaleDateString('es-ES') : 'N/A'}</div>
-        ),
     },
     {
         accessorKey: 'resolved_at',
@@ -195,6 +189,7 @@ export default function IndexIncidente({
         title: '',
         description: '',
         service_id: '',
+        category: '', // Añadir inicialización para category
     });
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -362,7 +357,7 @@ export default function IndexIncidente({
     // Texto central del gráfico circular
     const pieChartCenterText = (
         <>
-            <tspan x="50%" dy="0" className="fill-foreground text-3xl font-bold">
+            <tspan x="50%" dy="20" className="fill-foreground text-3xl font-bold">
                 {incidents.length}
             </tspan>
             <tspan x="50%" dy="24" className="fill-muted-foreground text-sm">

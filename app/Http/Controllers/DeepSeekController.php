@@ -29,7 +29,6 @@ class DeepSeekController extends Controller
                 . "Prioridad: {$incident->priority}\n"
                 . "Estado: {$incident->status}\n"
                 . "Servicio ID: {$incident->service_id}\n"
-                . "SLA deadline: {$incident->sla_deadline}\n"
                 . "\n"
                 . "Por favor, genera un procedimiento paso a paso y conciso para resolver este incidente, dirigido a un técnico de soporte TI. La respuesta debe ser directa, sin explicaciones extendidas, y estructurada como una lista numerada con los siguientes puntos principales, adaptando el contenido a cada uno según el incidente:\n"
                 . "1. Verificar conectividad VPN\n"

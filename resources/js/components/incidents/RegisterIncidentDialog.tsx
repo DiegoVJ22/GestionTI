@@ -71,6 +71,25 @@ export function RegisterIncidentDialog({ data, setData, post, errors, services, 
                             </Select>
                             <InputError message={errors.service_id} />
                         </div>
+                        <div className="grid gap-3">
+                            <ShadcnLabel htmlFor="category">Categoría</ShadcnLabel>
+                            <Select value={data.category as string} onValueChange={(value) => setData('category', value)}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Selecciona una categoría" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>Categorías</SelectLabel>
+                                        <SelectItem value="Red">Red</SelectItem>
+                                        <SelectItem value="Servidor">Servidor</SelectItem>
+                                        <SelectItem value="Aplicación">Aplicación</SelectItem>
+                                        <SelectItem value="Seguridad">Seguridad</SelectItem>
+                                        <SelectItem value="Base de Datos">Base de Datos</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.category} />
+                        </div>
                     </div>
                     <DialogFooter className="mt-4">
                         <DialogClose asChild>

@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('slas', function (Blueprint $table) {
+        Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_id')->nullable()->constrained()->onDelete('cascade');
-            $table->enum('priority', ['Alta', 'Media', 'Baja']);
-            $table->integer('max_resolution_time');
-        
+            $table->string('name');
+            $table->string('status')->default('activo');
+            $table->timestamp('last_checked_at')->nullable();
             $table->timestamps();
-        
-            $table->unique(['service_id', 'priority']);
         });
     }
 
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('slas');
+        Schema::dropIfExists('services');
     }
 };

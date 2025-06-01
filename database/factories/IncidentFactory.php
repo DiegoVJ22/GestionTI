@@ -18,14 +18,18 @@ class IncidentFactory extends Factory
     public function definition(): array
     {
         $service = Service::inRandomOrder()->first();
-        
+        $status = $this->faker->randomElement(['Abierto', 'En Progreso', 'Cerrado']);
+        $resolvedAt = ($status === 'Cerrado') ? $this->faker->dateTimeBetween('-1 month', 'now') : null;
+
         return [
             'title' => $this->generateIncidentTitle($service->name),
             'description' => $this->generateIncidentDescription(),
             'priority' => $this->faker->randomElement(['Alta', 'Media', 'Baja']),
-            'status' => 'Cerrado',
+            'status' => $status,
             'service_id' => $service->id,
             'user_id' => User::inRandomOrder()->first()->id,
+            'resolved_at' => $resolvedAt,
+            'category' => $this->faker->randomElement(['Red', 'Servidor', 'Aplicación', 'Seguridad', 'Base de Datos', null]),
         ];
     }
 
@@ -39,7 +43,14 @@ class IncidentFactory extends Factory
             "Degradación de rendimiento en {$serviceName}"
         ];
 
-        return $this->faker->randomElement($templates);
+        // Reemplazar placeholders con palabras clave IT
+        $title = $this->faker->randomElement($templates);
+        $title = str_replace('{issue}', $this->faker->randomElement($this->itKeywords), $title);
+        $title = str_replace('{component}', $this->faker->word(), $title);
+        $title = str_replace('{code}', $this->faker->randomNumber(3, true), $title); // Genera un número de 3 dígitos
+        $title = str_replace('{protocol}', $this->faker->randomElement(['HTTP', 'TCP', 'UDP', 'FTP']), $title);
+
+        return $title;
     }
 
     private function generateIncidentDescription(): string
@@ -69,12 +80,6 @@ class IncidentFactory extends Factory
             "Síntomas:",
             "- ".$this->faker->randomElement($details),
             "- ".$this->faker->randomElement($this->itKeywords),
-            "Impacto: ".$this->faker->randomElement([
-                'Interrupción del servicio principal',
-                'Degradación del rendimiento',
-                'Pérdida de datos temporales',
-                'Inaccesibilidad parcial'
-            ]),
             "Logs relevantes:",
             "[".$timestamp."] ERROR: ".$this->generateLogEntry()
         ]);

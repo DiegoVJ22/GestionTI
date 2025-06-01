@@ -33,11 +33,16 @@ class IncidentSeeder extends Seeder
         $endDate = $startDate->copy()->endOfMonth();
 
         Incident::factory()
-            ->count(rand(12, 20))
-            ->create(['created_at' => $this->randomDateInRange($startDate, $endDate)])
-            ->each(function ($incident) use ($startDate) {
-                $this->completeIncidentData($incident);
-                $this->createSolution($incident);
+            ->count(rand(30, 50)) // Aumentar el rango
+            ->create([
+                'created_at' => $this->randomDateInRange($startDate, $endDate),
+                'updated_at' => $this->randomDateInRange($startDate, $endDate)
+            ])
+            ->each(function ($incident) {
+                // Solo crear solución si el incidente está cerrado y tiene resolved_at
+                if ($incident->status === 'Cerrado' && $incident->resolved_at) {
+                    $this->createSolution($incident);
+                }
             });
     }
 
@@ -46,21 +51,6 @@ class IncidentSeeder extends Seeder
         return $start->copy()->addDays(rand(0, $end->diffInDays($start)))
                     ->addHours(rand(0, 23))
                     ->addMinutes(rand(0, 59));
-    }
-
-    private function completeIncidentData(Incident $incident): void
-    {
-        $priorityConfig = [
-            'Alta' => ['sla' => 24, 'resolve' => [1, 24]],
-            'Media' => ['sla' => 48, 'resolve' => [12, 48]],
-            'Baja' => ['sla' => 72, 'resolve' => [24, 72]]
-        ];
-
-        $config = $priorityConfig[$incident->priority];
-        
-        $incident->sla_deadline = $incident->created_at->copy()->addHours($config['sla']);
-        $incident->resolved_at = $incident->created_at->copy()->addHours(rand(...$config['resolve']));
-        $incident->save();
     }
 
     private function createSolution(Incident $incident): void

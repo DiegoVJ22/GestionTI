@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('services', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->enum('status', ['Operativo', 'Inestable', 'Crítico']);
-            $table->timestamp('last_checked_at')->nullable();
-            $table->timestamps();
+        Schema::table('incidents', function (Blueprint $table) {
+            $table->dropColumn('impact'); // Eliminar la columna 'impact'
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('services');
+        Schema::table('incidents', function (Blueprint $table) {
+            $table->string('impact')->nullable(); // Re-añadir la columna 'impact'
+        });
     }
 };

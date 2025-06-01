@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Incident; // Importar el modelo Incident
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SolutionFactory extends Factory
@@ -9,6 +10,7 @@ class SolutionFactory extends Factory
     public function definition(): array
     {
         return [
+            'incident_id' => Incident::inRandomOrder()->first()->id, // Añadir incident_id
             'steps' => $this->generateSteps(),
             'source' => $this->faker->randomElement(['Predefinida', 'IA']),
             'keywords' => $this->generateKeywords(),
@@ -63,13 +65,13 @@ class SolutionFactory extends Factory
         $type = array_rand($incidentTypes);
         $steps = $incidentTypes[$type];
         $count = rand(3, 6);
-        
+
         // Seleccionar pasos aleatorios manteniendo el orden
         $selectedSteps = array_slice($steps, 0, $count);
-        
+
         // Agregar paso final común
         $selectedSteps[] = ($count + 1) . ". Documentar solución en el sistema de gestión";
-        
+
         return implode("\n", $selectedSteps);
     }
 
@@ -82,7 +84,7 @@ class SolutionFactory extends Factory
             'aplicación' => ['Microservicios', 'API REST', 'Latencia', 'Escalabilidad'],
             'base de datos' => ['Replicación', 'Sharding', 'NoSQL', 'Transacciones']
         ];
-        
+
         $type = array_rand($keywords);
         return implode(',', $this->faker->randomElements($keywords[$type], rand(2, 4)));
     }

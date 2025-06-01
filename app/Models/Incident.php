@@ -16,12 +16,11 @@ class Incident extends Model
         'status',
         'service_id',
         'user_id',
-        'sla_deadline',
+        'category',
         'resolved_at',
     ];
 
     protected $casts = [
-        'sla_deadline' => 'datetime',
         'resolved_at' => 'datetime',
     ];
 

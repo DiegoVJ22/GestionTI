@@ -29,7 +29,6 @@ class OpenAIController extends Controller
                 . "Prioridad: {$incident->priority}\n"
                 . "Estado: {$incident->status}\n"
                 . "Servicio ID: {$incident->service_id}\n"
-                . "SLA deadline: {$incident->sla_deadline}\n"
                 . "\n"
                 . "Genera un procedimiento paso a paso para resolver este incidente, dirigido a un técnico de soporte TI. La respuesta debe:\n"
                 . "- Ser una lista numerada clara y directa\n"

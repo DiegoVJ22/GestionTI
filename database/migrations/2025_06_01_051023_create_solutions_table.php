@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('incident_id')->constrained()->onDelete('cascade');
             $table->text('steps');
-            $table->enum('source', ['Predefinida', 'IA']);
-            $table->string('keywords')->nullable();
+            $table->string('source'); // 'IA' o 'Predefinida'
+            $table->string('keywords')->nullable(); // separados por comas
             $table->timestamps();
         });
     }

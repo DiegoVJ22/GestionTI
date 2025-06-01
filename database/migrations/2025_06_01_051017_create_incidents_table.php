@@ -15,19 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->enum('priority', ['Alta', 'Media', 'Baja'])->nullable();
-            $table->enum('status', ['Abierto', 'En progreso', 'Cerrado'])->default('Abierto');
-            
+            $table->string('priority');
+            $table->string('status');
             $table->foreignId('service_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            
-            $table->timestamp('sla_deadline')->nullable();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamp('resolved_at')->nullable();
-
+            $table->string('impact')->nullable();
+            $table->string('category')->nullable();
             $table->timestamps();
-
-            $table->index(['priority', 'status']);
-            $table->index('service_id');
         });
     }
 

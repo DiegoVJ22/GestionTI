@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { Incident } from '@/types/incident';
 import * as React from 'react';
-import { Label, Pie, PieChart } from 'recharts';
+import { Label, Pie, PieChart, Cell } from 'recharts';
 
 type ChartData = {
     name: string;
@@ -86,6 +86,9 @@ export function IncidentPieChart({ incidents, priority, PRIORITY_COLORS }: Incid
                                     </text>
                                 )}
                             />
+                            {pieChartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
                         </Pie>
                         {/* Gráfico circular */}
                         <ChartTooltip
@@ -93,7 +96,7 @@ export function IncidentPieChart({ incidents, priority, PRIORITY_COLORS }: Incid
                                 if (!payload || payload.length === 0) return null;
 
                                 return (
-                                    <div className="bg-background rounded-md border p-2 shadow-md">
+                                    <div className="bg-background rounded-md border pl-2 pr-2 pb-2 shadow-md">
                                         <div className="flex items-center gap-2">
                                             {payload[0].payload.fill && (
                                                 <div

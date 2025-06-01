@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Incident;
 use App\Models\Service;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth; // Añadir esta importación
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +17,7 @@ class IncidentController extends Controller
     public function index(Request $request): Response
     {
         $query = Incident::with(['service', 'solutions'])
-            ->select(['id', 'title', 'priority', 'status', 'service_id', 'sla_deadline', 'resolved_at', 'created_at'])
+            ->select(['id', 'title', 'priority', 'status', 'service_id', 'resolved_at', 'created_at'])
             ->latest();
 
         // Filtros
@@ -70,10 +70,28 @@ class IncidentController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'service_id' => 'required|exists:services,id',
+            'category' => 'required|string|in:Red,Servidor,Aplicación,Seguridad,Base de Datos', // Añadir validación para category
         ]);
         
-        // Crear el incidente
-        $incident = Incident::create($validated);
+        $user_id = Auth::id(); // Obtener el ID del usuario autenticado
+        $service = Service::findOrFail($validated['service_id']); // Obtener el objeto Service
+
+        $priority = $this->determineIncidentPriority(
+            $validated['title'],
+            $validated['description'],
+            $service
+        );
+
+        // Crear el incidente con los campos adicionales
+        $incident = Incident::create([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'service_id' => $service->id,
+            'user_id' => $user_id, // Asignar el user_id
+            'priority' => $priority, // Asignar la prioridad determinada
+            'status' => 'Abierto', // Asignar estado por defecto
+            'category' => $validated['category'], // Guardar la categoría
+        ]);
         
         return to_route('incidents.index')->with('success', 'El incidente fue creado correctamente.');
     }
@@ -81,6 +99,65 @@ class IncidentController extends Controller
     public function solutions($id) {
         $incident = Incident::findOrFail($id);
         return $incident->solutions;
+    }
+
+    // Nuevo método para determinar la prioridad del incidente
+    private function determineIncidentPriority(string $title, string $description, Service $service): string
+    {
+        $text = strtolower($title . ' ' . $description);
+        $incidentPriority = 'Baja'; // Prioridad por defecto del incidente
+
+        // Palabras clave para Alta prioridad del incidente
+        $highKeywords = ['caído', 'inaccesible', 'no disponible', 'urgente', 'crítico', 'pérdida de datos', 'vulnerabilidad grave', 'no responde', 'imposible acceder', 'seguridad comprometida', 'sistema abajo'];
+        foreach ($highKeywords as $keyword) {
+            if (str_contains($text, $keyword)) {
+                $incidentPriority = 'Alta';
+                break;
+            }
+        }
+
+        // Palabras clave para Media prioridad del incidente (solo si no es ya Alta)
+        if ($incidentPriority !== 'Alta') {
+            $mediumKeywords = ['lento', 'intermitente', 'error', 'problema', 'falla', 'degradado', 'funcionalidad rota', 'parcialmente funciona', 'dificultad para usar'];
+            foreach ($mediumKeywords as $keyword) {
+                if (str_contains($text, $keyword)) {
+                    $incidentPriority = 'Media';
+                    break;
+                }
+            }
+        }
+
+        // Definir criticidad de servicios
+        $serviceNameLower = strtolower($service->name); // Comparar en minúsculas
+
+        $highCriticalityServices = ['correo corporativo', 'red', 'internet', 'erp', 'crm', 'ciberseguridad', 'vpn', 'servidores en producción', 'backups', 'autenticación', 'servidor web principal', 'api de autenticación', 'plataforma de pagos', 'base de datos mysql'];
+        $mediumCriticalityServices = ['apps internas no críticas', 'impresoras compartidas', 'updates no urgentes', 'soporte usuario', 'videollamadas', 'entorno qa'];
+
+        $serviceCriticalityLevel = 'Baja'; // Por defecto
+        foreach ($highCriticalityServices as $critService) {
+            if (str_contains($serviceNameLower, $critService)) {
+                $serviceCriticalityLevel = 'Alta';
+                break;
+            }
+        }
+        if ($serviceCriticalityLevel !== 'Alta') {
+            foreach ($mediumCriticalityServices as $medService) {
+                if (str_contains($serviceNameLower, $medService)) {
+                    $serviceCriticalityLevel = 'Media';
+                    break;
+                }
+            }
+        }
+
+        // Ajustar prioridad del incidente basada en la criticidad del servicio
+        if ($serviceCriticalityLevel === 'Alta') {
+            if ($incidentPriority === 'Media') $incidentPriority = 'Alta';
+            elseif ($incidentPriority === 'Baja') $incidentPriority = 'Media';
+        } elseif ($serviceCriticalityLevel === 'Media') {
+            if ($incidentPriority === 'Baja') $incidentPriority = 'Media';
+        }
+
+        return $incidentPriority;
     }
 
     /**
