@@ -3,7 +3,7 @@
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SlaController;
-use App\Http\Controllers\OpenAIController;
+use App\Http\Controllers\DeepSeekController;
 use App\Http\Controllers\SolutionController;
 use App\Models\Service;
 use App\Models\Incident;
@@ -46,10 +46,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('incidents', IncidentController::class);
     Route::resource('services', ServiceController::class);
 
-    // OpenAIController routes
-    Route::get('/chat', [OpenAIController::class, 'index']); // Aún no funcional+
-    Route::post('/ask/{incident}', [OpenAIController::class, 'askChatGPT'])->whereNumber('incident');
+    // DeepSeekController routes
+    Route::post('/incidents/{incident}/solve', [DeepSeekController::class, 'askChatGPT'])->name('incidents.solve');
 
+    // OpenAIController routes
+    Route::post('/incidents/{incident}/solve-openai', [App\Http\Controllers\OpenAIController::class, 'askOpenAI'])->name('incidents.solve-openai');
     /**
      * Rutas para ser consumidas en el frontend:
      * Métricas simuladas del servidor
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $services = Service::withCount('incidents')->get();
         return response()->json($services);
     });
+
 });
 
 /*

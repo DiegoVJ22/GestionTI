@@ -9,17 +9,17 @@ use App\Models\Incident;
 use App\Models\Solution;
 use Illuminate\Support\Facades\Log;
 
-class OpenAIController extends Controller
+class DeepSeekController extends Controller
 {
-    public function askOpenAI(Incident $incident): JsonResponse
+    public function askChatGPT(Incident $incident): JsonResponse
     {
-        Log::info("Entrando a askOpenAI con incidente ID: {$incident->id}");
+        Log::info("Entrando a askChatGPT con incidente ID: {$incident->id}");
 
         try {
-            $apiKey = config('services.openai.api_key');
+            $apiKey = config('services.deepseek.api_key');
             if (!$apiKey) {
                 return response()->json([
-                    'error' => 'La clave de API de OpenAI no está configurada.'
+                    'error' => 'La clave de API de DeepSeek no está configurada.'
                 ], 500);
             }
 
@@ -31,22 +31,22 @@ class OpenAIController extends Controller
                 . "Servicio ID: {$incident->service_id}\n"
                 . "SLA deadline: {$incident->sla_deadline}\n"
                 . "\n"
-                . "Genera un procedimiento paso a paso para resolver este incidente, dirigido a un técnico de soporte TI. La respuesta debe:\n"
-                . "- Ser una lista numerada clara y directa\n"
-                . "- Incluir entre 5 y 7 pasos concretos\n"
-                . "- No dar explicaciones ni justificaciones\n"
-                . "- Evitar desarrollar subtítulos\n"
-                . "- Cada paso debe ser una frase en imperativo, por ejemplo: 'Verifica conectividad VPN', 'Reinicia el servicio afectado', etc.\n"
-                . "\n"
-                . "Solo incluye los pasos. No agregues introducciones, resúmenes ni conclusiones.";
+                . "Por favor, genera un procedimiento paso a paso y conciso para resolver este incidente, dirigido a un técnico de soporte TI. La respuesta debe ser directa, sin explicaciones extendidas, y estructurada como una lista numerada con los siguientes puntos principales, adaptando el contenido a cada uno según el incidente:\n"
+                . "1. Verificar conectividad VPN\n"
+                . "2. Revisar estadísticas de rendimiento\n"
+                . "3. Optimizar configuración de almacenamiento\n"
+                . "4. Verificar capacidad de procesamiento\n"
+                . "5. Optimizar tareas de backup\n"
+                . "6. Monitorizar rendimientos\n"
+                . "7. Realizar pruebas de rendimiento";
 
             $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type'  => 'application/json',
                 ])
                 ->timeout(30)
-                ->post('https://api.openai.com/v1/chat/completions', [
-                    'model'    => 'gpt-3.5-turbo', // Puedes cambiar a 'gpt-4' u otro modelo si lo tienes disponible
+                ->post('https://api.deepseek.com/chat/completions', [
+                    'model'    => 'deepseek-chat',
                     'messages' => [
                         [
                             'role'    => 'system',
@@ -59,12 +59,12 @@ class OpenAIController extends Controller
                     ],
                 ]);
 
-            Log::info("Respuesta de OpenAI:", $response->json());
+            Log::info("Respuesta de DeepSeek:", $response->json());
 
             if ($response->failed()) {
-                Log::error("Falló la llamada a OpenAI", ['response' => $response->body()]);
+                Log::error("Falló la llamada a DeepSeek", ['response' => $response->body()]);
                 return response()->json([
-                    'error'   => 'Error al comunicarse con OpenAI.',
+                    'error'   => 'Error al comunicarse con DeepSeek.',
                     'details' => $response->json(),
                 ], 500);
             }
