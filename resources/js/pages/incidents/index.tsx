@@ -60,9 +60,9 @@ export type IncidentFormData = {
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-    Alta: 'bg-red-500',
-    Media: 'bg-yellow-500',
-    Baja: 'bg-green-500',
+    'Alta': '#ef4444', // red-500
+    'Media': '#eab308', // yellow-500
+    'Baja': '#22c55e'
 };
 
 const STATUS_STYLES: Record<'Abierto' | 'En Progreso' | 'Cerrado', string> = {
@@ -84,12 +84,12 @@ export const columns: ColumnDef<Incident>[] = [
         header: ({ table }) => (
             <Checkbox
                 checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                onCheckedChange={(value: boolean) => table.toggleAllPageRowsSelected(!!value)}
                 aria-label="Select all"
             />
         ),
         cell: ({ row }) => (
-            <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} aria-label="Select row" />
+            <Checkbox checked={row.getIsSelected()} onCheckedChange={(value: boolean) => row.toggleSelected(!!value)} aria-label="Select row" />
         ),
         enableSorting: false,
         enableHiding: false,
@@ -205,6 +205,12 @@ export default function IndexIncidente({
     const [status, setStatus] = React.useState(filters.status || 'all');
     const [month, setMonth] = React.useState(filters.month || 'all');
     const [year, setYear] = React.useState(filters.year || 'all');
+
+    const [appliedPriority, setAppliedPriority] = React.useState(filters.priority || 'all');
+    const [appliedStatus, setAppliedStatus] = React.useState(filters.status || 'all');
+    const [appliedMonth, setAppliedMonth] = React.useState(filters.month || 'all');
+    const [appliedYear, setAppliedYear] = React.useState(filters.year || 'all');
+    
     // Función para aplicar filtros
     const applyFilters = () => {
         router.get('/incidents', {
@@ -213,6 +219,10 @@ export default function IndexIncidente({
             month: month !== 'all' ? month : null,
             year: year !== 'all' ? year : null,
         });
+        setAppliedPriority(priority);
+        setAppliedStatus(status);
+        setAppliedMonth(month);
+        setAppliedYear(year);
     };
 
     // Resetear filtros
@@ -221,6 +231,10 @@ export default function IndexIncidente({
         setStatus('all');
         setMonth('all');
         setYear('all');
+        setAppliedPriority('all');
+        setAppliedStatus('all');
+        setAppliedMonth('all');
+        setAppliedYear('all');
         router.get('/incidents');
     };
 
@@ -312,15 +326,15 @@ export default function IndexIncidente({
                 {
                     name: priority,
                     value: incidents.length,
-                    fill: PRIORITY_COLORS[priority]?.replace('bg-', '#'), // Convert Tailwind class to hex color
+                    fill: PRIORITY_COLORS[priority], // Usar el mapeo directo
                 },
             ];
         }
 
         const priorities: ChartData[] = [
-            { name: 'Alta', value: 0, fill: PRIORITY_COLORS['Alta']?.replace('bg-', '#') },
-            { name: 'Media', value: 0, fill: PRIORITY_COLORS['Media']?.replace('bg-', '#') },
-            { name: 'Baja', value: 0, fill: PRIORITY_COLORS['Baja']?.replace('bg-', '#') },
+            { name: 'Alta', value: 0, fill: PRIORITY_COLORS['Alta'] },
+            { name: 'Media', value: 0, fill: PRIORITY_COLORS['Media'] },
+            { name: 'Baja', value: 0, fill: PRIORITY_COLORS['Baja'] },
         ];
 
         incidents.forEach((incident) => {
@@ -357,7 +371,7 @@ export default function IndexIncidente({
     // Texto central del gráfico circular
     const pieChartCenterText = (
         <>
-            <tspan x="50%" dy="20" className="fill-foreground text-3xl font-bold">
+            <tspan x="50%" dy="-12" className="fill-foreground text-3xl font-bold">
                 {incidents.length}
             </tspan>
             <tspan x="50%" dy="24" className="fill-muted-foreground text-sm">
@@ -395,14 +409,14 @@ export default function IndexIncidente({
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[2fr_1fr]">
                     <IncidentBarChart
                         incidents={incidents}
-                        month={month}
-                        year={year}
+                        month={appliedMonth}
+                        year={appliedYear}
                         months={months}
                     />
 
                     <IncidentPieChart
                         incidents={incidents}
-                        priority={priority}
+                        priority={appliedPriority}
                         PRIORITY_COLORS={PRIORITY_COLORS}
                     />
                 </div>

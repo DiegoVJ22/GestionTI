@@ -16,7 +16,7 @@ type IncidentPieChartProps = {
     PRIORITY_COLORS: Record<string, string>;
 };
 
-export function IncidentPieChart({ incidents, priority, PRIORITY_COLORS }: IncidentPieChartProps) {
+export function IncidentPieChart({ incidents, priority, PRIORITY_COLORS}: IncidentPieChartProps) {
     const pieChartData = React.useMemo<ChartData[]>(() => {
         if (priority !== 'all') {
             return [
@@ -76,12 +76,21 @@ export function IncidentPieChart({ incidents, priority, PRIORITY_COLORS }: Incid
             </CardHeader>
             <CardContent className="flex-1">
                 <ChartContainer config={pieChartConfig} className="mx-auto aspect-square max-h-[250px]">
-                    <PieChart>
-                        <Pie data={pieChartData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={2}>
+                    <PieChart width={250} height={250}>
+                        <Pie 
+                            data={pieChartData}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            cx="50%" 
+                            cy="50%"
+                            >
                             <Label
                                 position="center"
                                 content={() => (
-                                    <text textAnchor="middle" dominantBaseline="middle">
+                                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
                                         {pieChartCenterText}
                                     </text>
                                 )}
