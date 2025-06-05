@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label as ShadcnLabel } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { IncidentFormData } from '@/pages/incidents'; // Import IncidentFormData
 import { Service } from '@/types/service';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
-import { IncidentFormData } from '@/pages/incidents'; // Import IncidentFormData
 
 type RegisterIncidentDialogProps = {
     data: IncidentFormData;
@@ -33,7 +33,7 @@ export function RegisterIncidentDialog({ data, setData, post, errors, services, 
                             <Input
                                 id="title"
                                 className="mt-1 block w-full"
-                                            value={data.title as string}
+                                value={data.title as string}
                                 onChange={(e) => setData('title', e.target.value)}
                                 autoComplete="title"
                                 placeholder=""

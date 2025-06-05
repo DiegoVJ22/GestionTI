@@ -4,7 +4,7 @@ export interface Incident {
     id: number;
     title: string;
     priority: 'Alta' | 'Media' | 'Baja';
-    status: 'Abierto' | 'En Progreso' | 'Cerrado';
+    status: 'Abierto' | 'En Proceso' | 'Cerrado';
     service: {
         name: string;
         status: string;

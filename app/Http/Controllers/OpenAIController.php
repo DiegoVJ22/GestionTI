@@ -110,6 +110,11 @@ class OpenAIController extends Controller
 
             Log::info("Solución guardada con ID: {$solution->id}");
 
+            $incident = Incident::findOrFail($incident->id);
+            $incident->status = 'En Proceso';
+            $incident->save();
+            Log::info("Estado del incidente actualizado a 'En Proceso' para ID: {$incident->id}");
+
             return response()->json([
                 'solution_id'    => $solution->id,
                 'recommendation' => $recommendation,

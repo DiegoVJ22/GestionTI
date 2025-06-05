@@ -1,15 +1,15 @@
 'use client';
 
+import { IncidentBarChart } from '@/components/incidents/IncidentBarChart';
+import { IncidentFilters } from '@/components/incidents/IncidentFilters';
+import { IncidentPieChart } from '@/components/incidents/IncidentPieChart';
+import { IncidentSolutionDrawer } from '@/components/incidents/IncidentSolutionDrawer';
+import { IncidentsTable } from '@/components/incidents/IncidentsTable';
+import { RegisterIncidentDialog } from '@/components/incidents/RegisterIncidentDialog';
 import { Button } from '@/components/ui/button';
 import { ChartConfig } from '@/components/ui/chart';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Incident } from '@/types/incident';
@@ -27,12 +27,6 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
-import { IncidentFilters } from '@/components/incidents/IncidentFilters';
-import { RegisterIncidentDialog } from '@/components/incidents/RegisterIncidentDialog';
-import { IncidentBarChart } from '@/components/incidents/IncidentBarChart';
-import { IncidentPieChart } from '@/components/incidents/IncidentPieChart';
-import { IncidentSolutionDrawer } from '@/components/incidents/IncidentSolutionDrawer';
-import { IncidentsTable } from '@/components/incidents/IncidentsTable';
 import * as React from 'react';
 import { FormEventHandler } from 'react';
 
@@ -43,7 +37,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Añadir estos tipos arriba del componente
 type ChartData = {
     name: string;
     value: number;
@@ -56,18 +49,18 @@ export type IncidentFormData = {
     title: string;
     description: string;
     service_id: string;
-    category: string; // Añadir campo category
+    category: string;
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-    'Alta': '#ef4444', // red-500
-    'Media': '#eab308', // yellow-500
-    'Baja': '#22c55e'
+    Alta: '#ef4444',
+    Media: '#eab308',
+    Baja: '#22c55e',
 };
 
-const STATUS_STYLES: Record<'Abierto' | 'En Progreso' | 'Cerrado', string> = {
+const STATUS_STYLES: Record<'Abierto' | 'En Proceso' | 'Cerrado', string> = {
     Abierto: 'w-32 bg-blue-200 text-blue-900 border border-blue-300 font-medium rounded-full px-3 py-1 text-sm text-center',
-    'En Progreso': 'w-32 bg-yellow-200 text-yellow-900 border border-yellow-300 font-medium rounded-full px-3 py-1 text-sm text-center',
+    'En Proceso': 'w-32 bg-yellow-200 text-yellow-900 border border-yellow-300 font-medium rounded-full px-3 py-1 text-sm text-center',
     Cerrado: 'w-32 bg-green-200 text-green-900 border border-green-300 font-medium rounded-full px-3 py-1 text-sm text-center',
 };
 
@@ -77,114 +70,8 @@ const SERVICE_STATUS_COLORS: Record<string, string> = {
     Crítico: 'bg-red-500',
 };
 
-// Columnas ajustadas para incidentes
-export const columns: ColumnDef<Incident>[] = [
-    {
-        id: 'select',
-        header: ({ table }) => (
-            <Checkbox
-                checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-                onCheckedChange={(value: boolean) => table.toggleAllPageRowsSelected(!!value)}
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox checked={row.getIsSelected()} onCheckedChange={(value: boolean) => row.toggleSelected(!!value)} aria-label="Select row" />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'title',
-        header: 'Título',
-        cell: ({ row }) => <div className="font-medium">{row.getValue('title')}</div>,
-    },
-    {
-        accessorKey: 'priority',
-        header: 'Prioridad',
-        cell: ({ row }) => {
-            const priority = row.getValue('priority') as string;
-            return (
-                <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${PRIORITY_COLORS[priority]}`} />
-                    <span className="capitalize">{priority}</span>
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'status',
-        header: 'Estado',
-        cell: ({ row }) => {
-            const status = row.getValue('status') as 'Abierto' | 'En Progreso' | 'Cerrado';
-            return <span className={`min-w-[110px] text-center rounded-md px-2 py-1 text-sm capitalize ${STATUS_STYLES[status]}`}>{status}</span>;
-        },
-    },
-    {
-        accessorKey: 'service.name',
-        header: 'Servicio',
-        cell: ({ row }) => (
-            <div className="flex items-center gap-2">
-                <span>{row.original.service?.name}</span>
-                <span className={`h-2 w-2 rounded-full ${SERVICE_STATUS_COLORS[row.original.service?.status || '']}`} />
-            </div>
-        ),
-    },
-    {
-        accessorKey: 'steps',
-        header: 'Solución',
-        cell: ({ row }) => {
-            const steps = row.original.steps as string | null;
-            const incidentId = row.original.id;
-            
-            return (
-                <div className="flex items-center gap-2">
-                    {/* Indicador visual del estado */}
-                    <div className={`h-2 w-2 rounded-full ${steps ? 'bg-green-500' : 'bg-gray-300'}`} />
-                    
-                    {/* Componente drawer con steps */}
-                    <IncidentSolutionDrawer
-                        incidentId={incidentId}
-                        title={row.original.title}
-                        steps={steps} // ← Ahora pasa los steps
-                    />
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'resolved_at',
-        header: 'Resuelto en',
-        cell: ({ row }) => (
-            <div className="text-sm">{row.getValue('resolved_at') ? new Date(row.getValue('resolved_at')).toLocaleDateString('es-ES') : 'Pendiente'}</div>
-        ),
-    },
-    {
-        id: 'actions',
-        enableHiding: false,
-        cell: ({ row }) => {
-            const incident = row.original;
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Abrir menú</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem>Marcar como resuelto</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
-        },
-    },
-];
-
 export default function IndexIncidente({
-    incidents,
+    incidents: initialIncidents,
     filters,
     years,
 }: {
@@ -192,22 +79,159 @@ export default function IndexIncidente({
     filters: { [key: string]: string };
     years: number[];
 }) {
+    const { delete: destroy } = useForm();
+    // Estado local para los incidentes
+    const [incidents, setIncidents] = React.useState<Incident[]>(initialIncidents);
+
+    // Actualizar incidentes cuando cambian los props iniciales
+    React.useEffect(() => {
+        setIncidents(initialIncidents);
+    }, [initialIncidents]);
+
+    // Función para actualizar el estado de un incidente
+    const updateIncidentStatus = (id: number, newStatus: 'Abierto' | 'En Proceso' | 'Cerrado') => {
+        setIncidents((prevIncidents) => prevIncidents.map((incident) => (incident.id === id ? { ...incident, status: newStatus } : incident)));
+    };
+
+    // Columnas ajustadas para incidentes
+    const columns: ColumnDef<Incident>[] = React.useMemo(
+        () => [
+            {
+                id: 'select',
+                header: ({ table }) => (
+                    <Checkbox
+                        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+                        onCheckedChange={(value: boolean) => table.toggleAllPageRowsSelected(!!value)}
+                        aria-label="Select all"
+                    />
+                ),
+                cell: ({ row }) => (
+                    <Checkbox
+                        checked={row.getIsSelected()}
+                        onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
+                        aria-label="Select row"
+                    />
+                ),
+                enableSorting: false,
+                enableHiding: false,
+            },
+            {
+                accessorKey: 'title',
+                header: 'Título',
+                cell: ({ row }) => <div className="font-medium">{row.getValue('title')}</div>,
+            },
+            {
+                accessorKey: 'priority',
+                header: 'Prioridad',
+                cell: ({ row }) => {
+                    const priority = row.getValue('priority') as string;
+                    return (
+                        <div className="flex items-center gap-2">
+                            <div className={`h-2 w-2 rounded-full ${PRIORITY_COLORS[priority]}`} />
+                            <span className="capitalize">{priority}</span>
+                        </div>
+                    );
+                },
+            },
+            {
+                accessorKey: 'status',
+                header: 'Estado',
+                cell: ({ row }) => {
+                    const status = row.getValue('status') as 'Abierto' | 'En Proceso' | 'Cerrado';
+                    return (
+                        <span className={`min-w-[110px] rounded-md px-2 py-1 text-center text-sm capitalize ${STATUS_STYLES[status]}`}>{status}</span>
+                    );
+                },
+            },
+            {
+                accessorKey: 'service.name',
+                header: 'Servicio',
+                cell: ({ row }) => (
+                    <div className="flex items-center gap-2">
+                        <span>{row.original.service?.name}</span>
+                        <span className={`h-2 w-2 rounded-full ${SERVICE_STATUS_COLORS[row.original.service?.status || '']}`} />
+                    </div>
+                ),
+            },
+            {
+                accessorKey: 'steps',
+                header: 'Solución',
+                cell: ({ row }) => {
+                    const steps = row.original.steps as string | null;
+                    const incidentId = row.original.id;
+
+                    return (
+                        <div className="flex items-center gap-2">
+                            <div className={`h-2 w-2 rounded-full ${steps ? 'bg-green-500' : 'bg-gray-300'}`} />
+                            <IncidentSolutionDrawer
+                                incidentId={incidentId}
+                                title={row.original.title}
+                                steps={steps}
+                                onStatusUpdated={(newStatus) => updateIncidentStatus(incidentId, newStatus as 'Abierto' | 'En Proceso' | 'Cerrado')}
+                            />
+                        </div>
+                    );
+                },
+            },
+            {
+                accessorKey: 'resolved_at',
+                header: 'Resuelto en',
+                cell: ({ row }) => (
+                    <div className="text-sm">
+                        {row.getValue('resolved_at') ? new Date(row.getValue('resolved_at')).toLocaleDateString('es-ES') : 'Pendiente'}
+                    </div>
+                ),
+            },
+            {
+                id: 'actions',
+                enableHiding: false,
+                cell: ({ row }) => {
+                    const incident = row.original;
+
+                    return (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Abrir menú</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        //const toastId = toast.loading('Eliminando producto...');
+                                        destroy(route('incidents.destroy', row.original.id), {
+                                            //onSuccess: () => toast.remove(toastId),
+                                        });
+                                    }}
+                                >
+                                    Marcar como resuelto
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    );
+                },
+            },
+        ],
+        [],
+    );
+
     const { services } = usePage<{ services: Service[] }>().props;
     const { data, setData, post, errors } = useForm<IncidentFormData>({
         title: '',
         description: '',
         service_id: '',
-        category: '', // Añadir inicialización para category
+        category: '',
     });
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('incidents.store'), {
             preserveScroll: true,
-            onError: () => {
-                // TODO: Implement toast notifications or other error handling
-            },
+            onError: () => {},
         });
     };
+
     // Estados para los filtros
     const [priority, setPriority] = React.useState(filters.priority || 'all');
     const [status, setStatus] = React.useState(filters.status || 'all');
@@ -218,8 +242,7 @@ export default function IndexIncidente({
     const [appliedStatus, setAppliedStatus] = React.useState(filters.status || 'all');
     const [appliedMonth, setAppliedMonth] = React.useState(filters.month || 'all');
     const [appliedYear, setAppliedYear] = React.useState(filters.year || 'all');
-    
-    // Función para aplicar filtros
+
     const applyFilters = () => {
         router.get('/incidents', {
             priority: priority !== 'all' ? priority : null,
@@ -233,7 +256,6 @@ export default function IndexIncidente({
         setAppliedYear(year);
     };
 
-    // Resetear filtros
     const resetFilters = () => {
         setPriority('all');
         setStatus('all');
@@ -246,7 +268,6 @@ export default function IndexIncidente({
         router.get('/incidents');
     };
 
-    // Generar opciones de meses
     const months = [
         { value: 'all', label: 'Todos los meses' },
         { value: '1', label: 'Enero' },
@@ -287,7 +308,6 @@ export default function IndexIncidente({
         },
     });
 
-    // Datos para gráfico de barras
     const barChartData = React.useMemo(() => {
         const timeGroup: TimeGroup = year === 'all' && month === 'all' ? 'year' : year !== 'all' && month === 'all' ? 'month' : 'day';
 
@@ -312,7 +332,6 @@ export default function IndexIncidente({
             dataMap.set(key, (dataMap.get(key) || 0) + 1);
         });
 
-        // Generar rango completo de fechas
         const now = new Date();
         const labels =
             timeGroup === 'month'
@@ -327,14 +346,13 @@ export default function IndexIncidente({
         }));
     }, [incidents, month, year]);
 
-    // Datos para gráfico circular
     const pieChartData = React.useMemo<ChartData[]>(() => {
         if (priority !== 'all') {
             return [
                 {
                     name: priority,
                     value: incidents.length,
-                    fill: PRIORITY_COLORS[priority], // Usar el mapeo directo
+                    fill: PRIORITY_COLORS[priority],
                 },
             ];
         }
@@ -355,7 +373,6 @@ export default function IndexIncidente({
         return priorities.filter((p) => p.value > 0);
     }, [incidents, priority]);
 
-    // Configuración dinámica de gráficos
     const barChartConfig = {
         value: {
             label: 'Incidentes',
@@ -376,7 +393,6 @@ export default function IndexIncidente({
         ),
     } satisfies ChartConfig;
 
-    // Texto central del gráfico circular
     const pieChartCenterText = (
         <>
             <tspan x="50%" dy="-12" className="fill-foreground text-3xl font-bold">
@@ -387,51 +403,34 @@ export default function IndexIncidente({
             </tspan>
         </>
     );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Incidentes" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <IncidentFilters
-                    priority={priority}
-                    setPriority={setPriority}
-                    status={status}
-                    setStatus={setStatus}
-                    month={month}
-                    setMonth={setMonth}
-                    year={year}
-                    setYear={setYear}
-                    years={years}
-                    months={months}
-                    applyFilters={applyFilters}
-                    resetFilters={resetFilters}
-                />
-                <RegisterIncidentDialog
-                    data={data}
-                    setData={setData}
-                    post={post}
-                    errors={errors}
-                    services={services}
-                    submit={submit}
-                />
+                <div className="flex items-center justify-between">
+                    <IncidentFilters
+                        priority={priority}
+                        setPriority={setPriority}
+                        status={status}
+                        setStatus={setStatus}
+                        month={month}
+                        setMonth={setMonth}
+                        year={year}
+                        setYear={setYear}
+                        years={years}
+                        months={months}
+                        applyFilters={applyFilters}
+                        resetFilters={resetFilters}
+                    />
+                    <RegisterIncidentDialog data={data} setData={setData} post={post} errors={errors} services={services} submit={submit} />
+                </div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[2fr_1fr]">
-                    <IncidentBarChart
-                        incidents={incidents}
-                        month={appliedMonth}
-                        year={appliedYear}
-                        months={months}
-                    />
-
-                    <IncidentPieChart
-                        incidents={incidents}
-                        priority={appliedPriority}
-                        PRIORITY_COLORS={PRIORITY_COLORS}
-                    />
+                    <IncidentBarChart incidents={incidents} month={appliedMonth} year={appliedYear} months={months} />
+                    <IncidentPieChart incidents={incidents} priority={appliedPriority} PRIORITY_COLORS={PRIORITY_COLORS} />
                 </div>
-                <IncidentsTable
-                    table={table}
-                    columns={columns}
-                />
+                <IncidentsTable table={table} columns={columns} />
             </div>
         </AppLayout>
     );

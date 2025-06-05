@@ -173,7 +173,7 @@ class IncidentController extends Controller
      */
     public function edit(Incident $incident)
     {
-        //
+        
     }
 
     /**
@@ -181,7 +181,7 @@ class IncidentController extends Controller
      */
     public function update(Request $request, Incident $incident)
     {
-        //
+        
     }
 
     /**
@@ -189,6 +189,10 @@ class IncidentController extends Controller
      */
     public function destroy(Incident $incident)
     {
-        //
+        $incident = Incident::findOrFail($incident->id);
+        $incident->status = "Cerrado";
+        $incident->resolved_at = now();
+        $incident->save();
+        return to_route('incidents.index')->with('success', 'El incidente fue cerrado correctamente.');
     }
 }

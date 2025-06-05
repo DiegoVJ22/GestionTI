@@ -50,7 +50,7 @@ export function IncidentFilters({
                 <SelectContent>
                     <SelectItem value="all">Todos los estados</SelectItem>
                     <SelectItem value="Abierto">Abierto</SelectItem>
-                    <SelectItem value="En progreso">En progreso</SelectItem>
+                    <SelectItem value="En proceso">En proceso</SelectItem>
                     <SelectItem value="Cerrado">Cerrado</SelectItem>
                 </SelectContent>
             </Select>

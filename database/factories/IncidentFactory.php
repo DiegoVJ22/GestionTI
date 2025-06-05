@@ -18,7 +18,7 @@ class IncidentFactory extends Factory
     public function definition(): array
     {
         $service = Service::inRandomOrder()->first();
-        $status = $this->faker->randomElement(['Abierto', 'En Progreso', 'Cerrado']);
+        $status = "Cerrado"; // Asignar un estado cerrado por defecto
         $resolvedAt = ($status === 'Cerrado') ? $this->faker->dateTimeBetween('-1 month', 'now') : null;
 
         return [
