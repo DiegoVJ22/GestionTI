@@ -13,7 +13,7 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('auth/login');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
