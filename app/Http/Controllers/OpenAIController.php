@@ -39,24 +39,47 @@ class OpenAIController extends Controller
                 . "\n"
                 . "Solo incluye los pasos. No agregues introducciones, resúmenes ni conclusiones.";
 
+            // $response = Http::withHeaders([
+            //         'Authorization' => 'Bearer ' . $apiKey,
+            //         'Content-Type'  => 'application/json',
+            //     ])
+            //     ->timeout(30)
+            //     ->post('https://api.openai.com/v1/chat/completions', [
+            //         'model'    => 'gpt-3.5-turbo', // Puedes cambiar a 'gpt-4' u otro modelo si lo tienes disponible
+            //         'messages' => [
+            //             [
+            //                 'role'    => 'system',
+            //                 'content' => 'Eres un asistente experto en soporte TI. Ofreces pasos claros y concisos.'
+            //             ],
+            //             [
+            //                 'role'    => 'user',
+            //                 'content' => $prompt,
+            //             ],
+            //         ],
+            //     ]);
+
+            // OPCIÓN B: Especificar el archivo de certificados CA (recomendado)
             $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $apiKey,
-                    'Content-Type'  => 'application/json',
-                ])
-                ->timeout(30)
-                ->post('https://api.openai.com/v1/chat/completions', [
-                    'model'    => 'gpt-3.5-turbo', // Puedes cambiar a 'gpt-4' u otro modelo si lo tienes disponible
-                    'messages' => [
-                        [
-                            'role'    => 'system',
-                            'content' => 'Eres un asistente experto en soporte TI. Ofreces pasos claros y concisos.'
-                        ],
-                        [
-                            'role'    => 'user',
-                            'content' => $prompt,
-                        ],
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ])
+            ->withOptions([
+                'verify' => storage_path('app/public/cacert.pem'), // Ruta al archivo de certificados
+            ])
+            ->timeout(30)
+            ->post('https://api.openai.com/v1/chat/completions', [
+                'model'    => 'gpt-3.5-turbo',
+                'messages' => [
+                    [
+                        'role'    => 'system',
+                        'content' => 'Eres un asistente experto en soporte TI. Ofrece pasos claros y concisos.'
                     ],
-                ]);
+                    [
+                        'role'    => 'user',
+                        'content' => $prompt,
+                    ],
+                ],
+            ]);
 
             Log::info("Respuesta de OpenAI:", $response->json());
 
