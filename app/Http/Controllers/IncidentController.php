@@ -41,7 +41,7 @@ class IncidentController extends Controller
 
         return Inertia::render('incidents/index', [
             'incidents' => $query->get()->map(function ($incident) {
-                $incident->steps = $incident->solutions->pluck('steps')->first();
+                $incident->steps = $incident->solutions->pluck('steps')->last();
                 return $incident;
             }),
             'services' => Service::all(),

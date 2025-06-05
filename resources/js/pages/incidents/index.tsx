@@ -136,11 +136,19 @@ export const columns: ColumnDef<Incident>[] = [
         cell: ({ row }) => {
             const steps = row.original.steps as string | null;
             const incidentId = row.original.id;
+            
             return (
-                <IncidentSolutionDrawer
-                    incidentId={incidentId}
-                    title={row.original.title}
-                />
+                <div className="flex items-center gap-2">
+                    {/* Indicador visual del estado */}
+                    <div className={`h-2 w-2 rounded-full ${steps ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    
+                    {/* Componente drawer con steps */}
+                    <IncidentSolutionDrawer
+                        incidentId={incidentId}
+                        title={row.original.title}
+                        steps={steps} // ← Ahora pasa los steps
+                    />
+                </div>
             );
         },
     },
